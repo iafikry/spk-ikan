@@ -38,6 +38,7 @@ class Admin_model extends MY_Model
 				'kodeKtr' => $this->input->post('k_'. $ktr['kode']),
 				'nilai' => $this->input->post('nilai'. $ktr['kode'], true)
 			];
+			// var_dump($data); die;
 			$this->tambahData('tb_penilaian', $data);
 		}
 	}
@@ -54,12 +55,31 @@ class Admin_model extends MY_Model
 	}
 
 	public function ubahNilaiAlternatif($kode){
-		$kriteria = $this->ambilSemuaData('tb_kriteria')->result_array();
-		foreach ($kriteria as $ktr) {
-			$data = [
-				'nilai' => $this->input->post('nilai'. $ktr['kode'], true)
-			];
-			$this->updateData('tb_penilaian', $data, ['kodeAlt' => $kode, 'kodeKtr' => $ktr['kode']]);
+		$kriteria = $this->ambilSemuaData('tb_kriteria');
+		$jmNilai = $this->db->get_where('tb_penilaian', ['kodeAlt' => $kode])->num_rows();
+		// *jika kriteria bertambah
+		if ($kriteria->num_rows() >  $jmNilai) {
+			foreach ($kriteria->result_array() as $k) {
+				$ambilNilai  = $this->db->get_where('tb_penilaian', ['kodeAlt' => $kode, 'kodeKtr' => $k['kode']])->row_array();
+				if (!$ambilNilai) {
+					$data = [
+						'id' => '',
+						'kodeAlt' => $kode,
+						'kodeKtr' => $this->input->post('k_'. $k['kode']),
+						'nilai' => $this->input->post('nilai'. $k['kode'], true)
+					];
+					$this->tambahData('tb_penilaian', $data);
+				}
+			}
+		}
+		// *jika kriteria tidak bertambah
+		else{
+			foreach ($kriteria->result_array() as $ktr) {
+				$data = [
+					'nilai' => $this->input->post('nilai'. $ktr['kode'], true)
+				];
+				$this->updateData('tb_penilaian', $data, ['kodeAlt' => $kode, 'kodeKtr' => $ktr['kode']]);
+			}
 		}
 	}
 
